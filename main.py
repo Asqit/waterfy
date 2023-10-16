@@ -55,7 +55,11 @@ def notify() -> None:
     """A function that pushes notification"""
 
     notification.notify(
-        title="Waterfy", message="It is time to drink some water", timeout=2
+        app_name="Waterfy",
+        app_icon=os.getcwd() + "\icon.ico",
+        title="Waterfy",
+        message="It is time to drink some water",
+        timeout=2,
     )
     EVENT_SCHEDULE.enter(WATERFY_DELAY, 1, notify)
 
