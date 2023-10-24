@@ -3,10 +3,13 @@ from plyer import notification
 from platform import system
 from sched import scheduler
 from time import time, sleep
+import shutil
 import os
 
 
 def get_config_path() -> str:
+    """A function that returns path to config directory depending on OS"""
+
     result: str = ""
 
     if system() == "Windows":
@@ -18,17 +21,23 @@ def get_config_path() -> str:
 
 
 def get_corrected_minutes() -> int:
-    while True:
-        minutes = int(input("Enter amount of minutes between reminders: "))
+    """A function that returns only positive minutes (valid)"""
+    while (value := int(input("Minutes between reminders?: "))) <= 0:
+        print(f"Invalid value: {value}, please try again")
+    else:
+        return value
 
-        if minutes <= 0:
-            print("Invalid value, please try again")
-            continue
 
-        return minutes
+def move_assets() -> None:
+    """A function that will move assets to config directory"""
+    source = os.path.join(os.getcwd(), "assets")
+    destination = os.path.join(get_config_path(), "assets")
+
+    shutil.copytree(src=source, dst=destination)
 
 
 def create_configuration() -> None:
+    """A function responsible for creating configuration & it's directory"""
     minutes = get_corrected_minutes()
     path = get_config_path()
 
@@ -37,6 +46,15 @@ def create_configuration() -> None:
 
     data = {"frequency": minutes}
 
+    # Try copy the assets folder
+    try:
+        move_assets()
+    except Exception as e:
+        shutil.rmtree(os.path.join(get_config_path()))
+        print(f"An exception occurred\nDetails: {e}")
+        exit(1)
+
+    # Try creating the JSON config
     try:
         with open(file=path + "waterfy.json", mode="w") as cfg:
             dump(data, cfg, ensure_ascii=False, indent=4)
@@ -62,7 +80,6 @@ def load_configuration(file_path: str) -> dict | None:
     if not os.path.exists(file_path) or not os.path.isfile(file_path):
         print("No configuration file found, creating a new one")
         create_configuration()
-        return
 
     try:
         with open(file=file_path, mode="r") as raw_file:
@@ -79,6 +96,7 @@ def load_configuration(file_path: str) -> dict | None:
 
 
 def get_notification_frequency() -> int:
+    """simple function that returns frequency key from JSON config"""
     config = load_configuration(get_config_path() + "waterfy.json")
 
     if config == None:
@@ -92,6 +110,7 @@ NOTIFICATION_FREQUENCY = get_notification_frequency() * 60
 
 
 def push_notification() -> None:
+    """Actual function that calls the plyer API for notification"""
     notification.notify(
         app_name="Waterfy",
         app_icon=os.getcwd() + "\\assets\icon.ico",
@@ -103,6 +122,7 @@ def push_notification() -> None:
 
 
 def init() -> None:
+    """Entry point of our app"""
     EVENT_SCHEDULER.enter(1, 1, push_notification)
     EVENT_SCHEDULER.run()
 
