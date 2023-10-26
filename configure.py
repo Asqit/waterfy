@@ -61,6 +61,7 @@ def create_configuration() -> None:
 
 
 def run_configure():
+    print("Running configure")
     config_path = get_config_path()
     if not os.path.exists(config_path):
         os.makedirs(config_path)

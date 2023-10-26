@@ -1,4 +1,4 @@
-from json import load, JSONDecodeError, dump
+from json import load, JSONDecodeError
 from plyer import notification
 from platform import system
 from sched import scheduler
@@ -21,7 +21,7 @@ def get_config_path() -> str:
 
 def run_configure() -> None:
     try:
-        with open(os.path.join(get_config_path(), "configure.py")) as f:
+        with open(os.path.join(get_config_path(), "configure.py"), "r") as f:
             exec(f.read())
     except:
         print("Failed to execute configure.py")
